@@ -10,8 +10,8 @@
 
 Name:           python-%{pypi_name}
 Version:        %{pypi_version}.0
-Release:        1%{?dist}
-Summary:        A PyTorch repo for data loading and utilities.
+Release:        2%{?dist}
+Summary:        A PyTorch module for data loading
 
 License:        BSD-3-Clause
 URL:            https://github.com/pytorch/data
@@ -20,33 +20,30 @@ Source0:        %{url}/archive/%{commit0}/data-%{shortcommit0}.tar.gz
 %else
 Source0:        %{url}/archive/refs/tags/v%{version}.tar.gz#/data-%{version}.tar.gz
 # Do not use git submodules
+# Do not use distutils
 Patch0:         0001-Prepare-torchdata-setup-for-fedora.patch
 %endif
 
 # Limit to these because that is what torch is on
 ExclusiveArch:  x86_64 aarch64
-%global toolchain clang
-
-# Empty %files file .../rpmbuild/BUILD/data-0.7.0/debugsourcefiles.list
-%global debug_package %{nil}
+BuildArch:      noarch
 
 BuildRequires:  python3-devel
-BuildRequires:  python3dist(packaging)
-BuildRequires:  python3dist(pip)
+BuildRequires:  python3-torch-devel
 BuildRequires:  python3dist(requests)
-BuildRequires:  python3dist(torch)
+BuildRequires:  python3dist(setuptools)
 BuildRequires:  python3dist(urllib3)
 
 %description
 torchdata is a library of common modular data loading primitives for
-easily constructing flexible and performant data pipelines.
+easily constructing data pipelines.
 
 %package -n     python3-%{pypi_name}
 Summary:        %{summary}
 
 %description -n python3-%{pypi_name}
 torchdata is a library of common modular data loading primitives for
-easily constructing flexible and performant data pipelines.
+easily constructing data pipelines.
 
 %prep
 %if %{with gitcommit}
@@ -63,62 +60,30 @@ rm -rf third_party/*
 %build
 %py3_build
 
+# Depends on 
+# E   ModuleNotFoundError: No module named 'expecttest'
+# %%check
+# %%pytest
+
 %install
 %py3_install
 
-%files -n python3-%{pypi_name}
+# Programatically create the list of dirs
+echo "s|%{buildroot}%{python3_sitelib}|%%dir %%{python3_sitelib}|g" > br.sed
+find %{buildroot}%{python3_sitelib} -mindepth 1 -type d  > dirs.files
+sed -i -f br.sed dirs.files 
+cat dirs.files
+
+%files -n python3-%{pypi_name} -f dirs.files
 %license LICENSE
 %doc README.md
-
-%dir %{python3_sitelib}/%{pypi_name}
-%dir %{python3_sitelib}/%{pypi_name}/__pycache__
-%dir %{python3_sitelib}/%{pypi_name}/dataloader2
-%dir %{python3_sitelib}/%{pypi_name}/dataloader2/__pycache__
-%dir %{python3_sitelib}/%{pypi_name}/dataloader2/communication
-%dir %{python3_sitelib}/%{pypi_name}/dataloader2/communication/__pycache__
-%dir %{python3_sitelib}/%{pypi_name}/dataloader2/graph
-%dir %{python3_sitelib}/%{pypi_name}/dataloader2/graph/__pycache__
-%dir %{python3_sitelib}/%{pypi_name}/dataloader2/random
-%dir %{python3_sitelib}/%{pypi_name}/dataloader2/random/__pycache__
-%dir %{python3_sitelib}/%{pypi_name}/dataloader2/utils
-%dir %{python3_sitelib}/%{pypi_name}/dataloader2/utils/__pycache__
-%dir %{python3_sitelib}/%{pypi_name}/datapipes
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/__pycache__
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/iter
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/iter/__pycache__
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/iter/load
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/iter/load/__pycache__
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/iter/transform
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/iter/transform/__pycache__
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/iter/util
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/iter/util/__pycache__
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/iter/util/protobuf_template
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/iter/util/protobuf_template/__pycache__
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/map
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/map/__pycache__
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/map/load
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/map/load/__pycache__
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/map/transform
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/map/transform/__pycache__
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/map/util
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/map/util/__pycache__
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/utils
-%dir %{python3_sitelib}/%{pypi_name}/datapipes/utils/__pycache__
-
-%{python3_sitelib}/%{pypi_name}/{*.py,__pycache__/*.pyc}
-%{python3_sitelib}/%{pypi_name}/dataloader2/{*.py,__pycache__/*.pyc}
-%{python3_sitelib}/%{pypi_name}/dataloader2/{communication,graph,random,utils}/{*.py,__pycache__/*.pyc}
-%{python3_sitelib}/%{pypi_name}/datapipes/{*.py,__pycache__/*.pyc}
-%{python3_sitelib}/%{pypi_name}/datapipes/iter/{*.py,*.pyi,__pycache__/*.pyc}
-%{python3_sitelib}/%{pypi_name}/datapipes/iter/{load,transform,util}/{*.py,__pycache__/*.pyc}
-%{python3_sitelib}/%{pypi_name}/datapipes/iter/util/protobuf_template/{*.py,__pycache__/*.pyc}
-%{python3_sitelib}/%{pypi_name}/datapipes/map/{*.py,*.pyi,__pycache__/*.pyc}
-%{python3_sitelib}/%{pypi_name}/datapipes/map/{load,transform,util}/{*.py,__pycache__/*.pyc}
-%{python3_sitelib}/%{pypi_name}/datapipes/utils/{*.py,__pycache__/*.pyc}
-
-%{python3_sitelib}/%{pypi_name}-%{version}-py3.12.egg-info
+%{python3_sitelib}/%{pypi_name}
+%{python3_sitelib}/%{pypi_name}-*.egg-info
 
 %changelog
-* Sat Oct 14 2023 Tom Rix <trix@redhat.com> - 0.7.0-1
+* Fri Dec 8 2023 Tom Rix <trix@redhat.com> - 0.7.0-2
+- Comment why no check
+
+* Tue Dec 5 2023 Tom Rix <trix@redhat.com> - 0.7.0-1
 - Initial package.
 
