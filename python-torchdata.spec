@@ -10,7 +10,7 @@
 
 Name:           python-%{pypi_name}
 Version:        %{pypi_version}.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A PyTorch module for data loading
 
 License:        BSD-3-Clause
@@ -68,19 +68,16 @@ rm -rf third_party/*
 %install
 %py3_install
 
-# Programatically create the list of dirs
-echo "s|%{buildroot}%{python3_sitelib}|%%dir %%{python3_sitelib}|g" > br.sed
-find %{buildroot}%{python3_sitelib} -mindepth 1 -type d  > dirs.files
-sed -i -f br.sed dirs.files 
-cat dirs.files
-
-%files -n python3-%{pypi_name} -f dirs.files
+%files -n python3-%{pypi_name}
 %license LICENSE
 %doc README.md
 %{python3_sitelib}/%{pypi_name}
 %{python3_sitelib}/%{pypi_name}-*.egg-info
 
 %changelog
+* Thu Dec 14 2023 Tom Rix <trix@redhat.com> - 0.7.0-3
+- Remove dir generation
+
 * Fri Dec 8 2023 Tom Rix <trix@redhat.com> - 0.7.0-2
 - Comment why no check
 
